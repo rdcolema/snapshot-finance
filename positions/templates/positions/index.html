@@ -1,0 +1,212 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Positions{% endblock %}
+
+
+{% block extra_head %}
+
+    <style>
+
+        /* Positions Table Stuff */
+
+        #positions-table td {
+            padding: 1px 8px
+        }
+
+        #positions-table td:nth-child(1), #positions-table td:nth-child(2) {
+            color: #11C
+        }
+
+        #positions-table td:nth-child(n+3), #positions-table th:nth-child(n+3) {
+            text-align: right;
+        }
+
+        #positions-table td:last-child, #positions-table th:last-child {
+            display: none
+        }
+
+        #positions-table tfoot td:nth-child(1) {
+            color: black;
+        }
+
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+
+    <!--Sidebar-->
+    <div id="sidenav" class="sidenav">
+
+        <p id="accounts-header" class="sidebar-header">Select Accounts To Display</p>
+        <select multiple="multiple" name="accounts[]" id="dropdown_accounts" class="form-control">
+            {% for acct in accounts %}
+                <option value="{{ acct }}" class="form-control">{{ acct }}</option>
+            {% endfor %}
+        </select>
+
+        <hr>
+
+        <p id="cash-header" class="sidebar-header">Cash Balance</p>
+        <p id="cash-totals">${{ total_cash }}</p>
+
+        <hr>
+
+        <p id="total-value-header" class="sidebar-header">Total Value</p>
+        <p id="total-value">${{ total_value }}</p>
+
+        <hr>
+
+        <p id="position-count-header" class="sidebar-header">Number of Positions</p>
+        <p id="position-count">{{ num_positions }}</p>
+
+        <hr>
+
+    </div>
+
+    <p id="positions-header" class="page-title">Positions</p>
+
+    <hr>
+
+    <!--Positions Table-->
+    {{ positions|safe }}
+
+
+    <!--JS-->
+    <script>
+
+        // Coloring numbers based on direction of change
+
+        function colorCols() {
+            var colsToColor = [6, 7, 8, 10, 11];
+
+            $('#positions-table tr:not(thead tr)').each(function(){
+
+                for (var i=0; i<colsToColor.length; i++) {
+                    var cell = $(":nth-child(" + colsToColor[i] + ")", this);
+
+                    if (cell.text() < 0) {
+                        cell.css("color", "#d14836");
+                    }
+
+                    else {
+                        cell.css("color", "#093");
+                    }
+
+                }
+            })
+        }
+
+        $(document).ready(function() {
+
+            // add an ID to the main table for reference
+            $('.dataframe').attr("id", "positions-table");
+
+
+            // Handling totals row for sorting purposes:
+
+            // Find totals row
+            var totalsRow = $("#positions-table td").filter(function() {
+                return $(this).text() == "Totals";
+            }).closest("tr");
+
+            // Detach totals row and create tfoot element from it
+            var totalsRow = totalsRow.detach();
+            var totalsHtml = "<tfoot>" + totalsRow.html() + "</tfoot>";
+
+            // Append tfoot to tbody
+            $("#positions-table tbody").after(totalsHtml);
+
+            // color columns
+            colorCols();
+
+        });
+
+
+
+        // Account Filtering
+
+
+        $('#dropdown_accounts').change(function() {
+            var filter_accounts = Array();
+
+            // get list of selected accounts
+            $('#dropdown_accounts').children('option').filter(':selected').each(
+                function(i) {
+                  filter_accounts.push($(this).text());
+            })
+
+            // hide rows for unselected accounts
+            $('#positions-table tbody tr').each(function(){
+
+                var row = $(this);
+                var account = row.children('td').last().text();
+
+                // reset all to display
+                row.css("display", "table-row");
+
+                // hide the filtered accounts
+                if( $.inArray(account, filter_accounts) == -1 ){
+                    row.css("display", "none");
+                }
+            })
+
+            // function for summing columns
+            function sumCol(ix) {
+                colTotal = 0;
+
+                $("#positions-table tbody td:nth-child(" + ix + "):visible").each(function() {
+
+                    colTotal += parseFloat($(this).text());
+                })
+
+                return colTotal.toFixed(2);
+            }
+
+            // update total market value
+            var totalMarketValue = sumCol(4);
+            $("#positions-table tfoot td:nth-child(4)").text(totalMarketValue);
+
+            // update day's gain/loss ($)
+            var daysGain = sumCol(8);
+            $("#positions-table tfoot td:nth-child(8)").text(daysGain);
+
+            // update day's gain/loss (%)
+            $("#positions-table tfoot td:nth-child(7)").text( (100. * daysGain / totalMarketValue).toFixed(2) );
+
+            // update total cost basis
+            $("#positions-table tfoot td:nth-child(9)").text(sumCol(9));
+
+            // update total gain/loss ($)
+            var totalGain = sumCol(10);
+            $("#positions-table tfoot td:nth-child(10)").text(totalGain);
+
+            // update total gain/loss (%)
+            $("#positions-table tfoot td:nth-child(11)").text( (100. * totalGain / totalMarketValue).toFixed(2) );
+
+            // update total cash
+            var cashTotal = 0;
+
+            {% for acct, cash in cash_balances.items %}
+                if( $.inArray( "{{ acct }}" , filter_accounts ) != -1 ) {
+                    cashTotal += {{ cash }};
+                }
+            {% endfor %}
+
+            $('#cash-totals').text("$" + cashTotal.toFixed(2));
+
+            // update total value
+            var totalVal = Number(cashTotal) + Number(totalMarketValue);
+            $('#total-value').text("$" + totalVal.toFixed(2));
+
+            // color cols
+            colorCols();
+
+        });
+
+
+    </script>
+
+{% endblock %}

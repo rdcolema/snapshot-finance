@@ -1,0 +1,195 @@
+{% load staticfiles %}
+
+<html>
+<head>
+
+    {% block meta_tags %}{% endblock %}
+
+    <title>
+        {% block title %}Portfoliology"{% endblock %}
+    </title>
+
+    {% block stylesheets %}
+        <link rel="shortcut icon" type="image/png" href="{% static 'positions/favicon.png' %}"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"/>
+    {% endblock %}
+
+    {% block javascript %}
+        <!--jquery-->
+        <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+        <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+        <!--bootstrap js-->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous">
+        </script>
+        <!--sorttable-->
+        <script src="https://kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+    {% endblock %}
+
+    {% block extra_head %}{% endblock %}
+
+</head>
+
+
+<body>
+
+    <style>
+
+        /* Navbar */
+
+        .navbar-collapse .navbar-brand {
+            background-color: #f1f1f1
+        }
+
+        /* Page Titles */
+
+        .page-title {
+            margin: 25px 0 0 230px;
+            font-family: Arial,sans-serif;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        /* Table Formatting */
+
+        .dataframe {
+            font-family: Arial,sans-serif;
+            border: none;
+            margin: 25px 0 70px 230px;
+            width: 85%;
+        }
+
+        .dataframe th {
+            font-size: .8em;
+            white-space: nowrap;
+        }
+
+        .dataframe td {
+            font-size: .75em;
+            white-space: nowrap;
+            overflow: ellipsis;
+            border-left: none;
+            border-right: none;
+        }
+
+        .thead-inverse th {
+            color: black;
+            background-color: #f2f2f2;
+            border-left: none;
+            border-right: none;
+            border-bottom: none
+        }
+
+        .dataframe tfoot {
+            font-weight: bold;
+            background-color: #e6eef7;
+        }
+
+        .table>thead>tr>th {
+            border-bottom: none
+        }
+
+        /*Sidebar Stuff*/
+
+        .sidebar-header {
+            margin: 0 15px 0 28px;
+            font-family: Arial,sans-serif;
+            color: #dd4b39;
+            font-size: 1em;
+        }
+
+        #dropdown_accounts {
+            margin: 5px 15px -25px 15px;
+            width: 90%;
+            overflow:hidden;
+            border:none;
+            box-shadow: none
+        }
+
+        #dropdown_accounts option {
+            background-color: #e6eef7;
+            overflow: hidden;
+            font-weight: bold
+        }
+
+        #cash-totals {
+            margin: 0 15px 0 28px;
+            font-family: Arial,sans-serif;
+            color: #093;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        #total-value {
+            margin: 0 15px 0 28px;
+            font-family: Arial,sans-serif;
+            color: #093;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        #position-count {
+            margin: 0 15px 0 28px;
+            font-family: Arial,sans-serif;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 220px;
+            position: absolute;
+            z-index: 1;
+            background-color: white;
+            top: 180px;
+            left: 0;
+            overflow-x: hidden;
+        }
+
+    </style>
+
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                  data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a style="color: #4285f4; font-family:sans-serif typeface" class="navbar-brand" href="/">Portfoliology</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li><a href="/positions">Positions </a></li>
+            <li><a href="/analysis">Analysis </a></li>
+          </ul>
+            <ul class="nav navbar-right"><li><a href="https://iextrading.com">Data provided by IEX</a></li></ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+
+        // Make all tables that come from pandas sortable
+        $(document).ready(function() {
+            $(".dataframe").addClass("table").addClass("sortable");
+            $(".dataframe thead").addClass("thead-inverse");
+        });
+
+    </script>
+
+
+</body>
+
+</html>
