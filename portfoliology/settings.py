@@ -21,10 +21,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 env = environ.Env(
-    DEBUG=(bool, False),
     DEFAULT_DB_URL=(str, ''),
     SECRET_KEY=(str, 'dev-project-secret-key-override-in-dot-env'),
 )
+
+environ.Env.read_env()
 
 DEBUG = env('DEBUG')
 SECRET_KEY = env('SECRET_KEY')
