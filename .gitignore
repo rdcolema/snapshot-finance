@@ -82,7 +82,7 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-portfoliology/.env
+snapshot-finance/.env
 .venv
 env/
 venv/

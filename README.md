@@ -1,4 +1,4 @@
-# Portfoliology
+# Snapshot Finance
 
 Track and analyze investments in real time across all your accounts
 
