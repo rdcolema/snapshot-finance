@@ -19,7 +19,7 @@ class Account(models.Model):
 
 
 class Position(models.Model):
-    """A brokerage account"""
+    """A Position, such as an equity holding"""
 
     name = models.CharField(max_length=100)
     symbol = models.CharField(max_length=10)
