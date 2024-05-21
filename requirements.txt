@@ -9,7 +9,7 @@ numpy==1.22.0
 pandas==0.24.2
 python-dateutil==2.6.1
 pytz==2017.2
-requests==2.31.0
+requests==2.32.0
 simplejson==3.10.0
 singledispatch==3.4.0.3
 six==1.11.0
