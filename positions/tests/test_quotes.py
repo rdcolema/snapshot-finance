@@ -31,16 +31,23 @@ class TestQuotes:
         assert mock_fetch.call_count == 1
         assert result1 == result2
 
+    @patch("positions.services.quotes.time.sleep")
     @patch("positions.services.quotes._fetch_quote")
-    def test_retry_on_failure(self, mock_fetch):
-        mock_fetch.side_effect = [None, None, {"symbol": "AAPL", "price": Decimal("175.00")}]
+    def test_retry_on_failure(self, mock_fetch, mock_sleep):
+        mock_fetch.side_effect = [
+            ConnectionError("timeout"),
+            ConnectionError("timeout"),
+            {"symbol": "AAPL", "price": Decimal("175.00")},
+        ]
         result = _fetch_with_retry("AAPL", max_retries=3)
         assert result is not None
         assert mock_fetch.call_count == 3
+        assert mock_sleep.call_count == 2
 
+    @patch("positions.services.quotes.time.sleep")
     @patch("positions.services.quotes._fetch_quote")
-    def test_all_retries_exhausted(self, mock_fetch):
-        mock_fetch.return_value = None
+    def test_all_retries_exhausted(self, mock_fetch, mock_sleep):
+        mock_fetch.side_effect = ConnectionError("timeout")
         result = _fetch_with_retry("BAD", max_retries=3)
         assert result is None
         assert mock_fetch.call_count == 3

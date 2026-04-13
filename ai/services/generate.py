@@ -9,16 +9,20 @@ logger = logging.getLogger(__name__)
 MODEL = "claude-opus-4-6"
 MAX_TOKENS = 1024
 
-THESIS_SYSTEM_PROMPT = """You are helping an experienced self-directed retail investor write a concise investment thesis. \
-Based on the position data provided, write a clear 2-4 sentence thesis covering: why to own this stock, \
-what the key growth/value drivers are, and what makes it a compelling hold at the current price. \
-Be specific to this company -- avoid generic statements. No disclaimers. No bullet points."""
+THESIS_SYSTEM_PROMPT = (
+    "You are helping an experienced self-directed retail investor write a concise investment thesis. "
+    "Based on the position data provided, write a clear 2-4 sentence thesis covering: why to own this stock, "
+    "what the key growth/value drivers are, and what makes it a compelling hold at the current price. "
+    "Be specific to this company -- avoid generic statements. No disclaimers. No bullet points."
+)
 
-BEAR_CASE_SYSTEM_PROMPT = """You are helping an experienced self-directed retail investor articulate the bear case \
-for a stock they own. Based on the position data provided, write a concise 2-4 sentence bear case covering: \
-the biggest risks to the thesis, what could go wrong, and at what point the investor should reconsider the position. \
-Be specific and concrete -- name actual competitive threats, regulatory risks, or valuation concerns. \
-No disclaimers. No bullet points."""
+BEAR_CASE_SYSTEM_PROMPT = (
+    "You are helping an experienced self-directed retail investor articulate the bear case "
+    "for a stock they own. Based on the position data provided, write a concise 2-4 sentence bear case covering: "
+    "the biggest risks to the thesis, what could go wrong, and at what point the investor should reconsider the "
+    "position. Be specific and concrete -- name actual competitive threats, regulatory risks, or valuation concerns. "
+    "No disclaimers. No bullet points."
+)
 
 
 def _build_position_context(position):

@@ -7,9 +7,13 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.generic import TemplateView
 
+from ai.models import ThesisCheck
+from ai.services.client import is_available as ai_available
 from core.models import Sector, Theme
 from positions.models import Account, Position
+from positions.services.fundamentals import get_fundamentals
 from positions.services.portfolio import get_enriched_positions
+from positions.services.quotes import get_quote
 
 
 class PositionsView(LoginRequiredMixin, TemplateView):
@@ -33,13 +37,8 @@ class PositionDetailView(LoginRequiredMixin, TemplateView):
             Position.objects.select_related("account", "sector").prefetch_related("themes", "lots"),
             pk=kwargs["pk"],
         )
-        from positions.services.fundamentals import get_fundamentals
-        from positions.services.quotes import get_quote
-
         quote = get_quote(position.symbol) or {}
         fundamentals = get_fundamentals(position.symbol) or {}
-
-        from ai.services.client import is_available as ai_available
 
         context["position"] = position
         context["quote"] = quote
@@ -47,9 +46,6 @@ class PositionDetailView(LoginRequiredMixin, TemplateView):
         context["lots"] = position.lots.all()
         context["ai_available"] = ai_available()
         context["all_themes"] = Theme.objects.all()
-
-        from ai.models import ThesisCheck
-
         context["thesis_checks"] = ThesisCheck.objects.filter(position=position).order_by("-created_at")[:10]
         return context
 

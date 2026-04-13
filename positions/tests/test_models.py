@@ -110,3 +110,43 @@ class TestLotAggregation:
             purchase_date=datetime.date(2022, 1, 15),
         )
         assert lot.cost_basis == Decimal("11000.0000")
+
+
+@pytest.mark.django_db
+class TestThesisTimestamp:
+    def test_thesis_timestamp_set_on_create(self, accounts):
+        pos = Position.objects.create(symbol="AAPL", account=accounts["taxable"], thesis="Strong ecosystem.")
+        assert pos.thesis_updated_at is not None
+
+    def test_no_timestamp_without_thesis(self, accounts):
+        pos = Position.objects.create(symbol="AAPL", account=accounts["taxable"])
+        assert pos.thesis_updated_at is None
+
+    def test_timestamp_updates_on_edit(self, accounts):
+        pos = Position.objects.create(symbol="AAPL", account=accounts["taxable"], thesis="Original thesis.")
+        first_ts = pos.thesis_updated_at
+        assert first_ts is not None
+
+        pos.thesis = "Updated thesis with new reasoning."
+        pos.save()
+        pos.refresh_from_db()
+        assert pos.thesis_updated_at > first_ts
+
+    def test_timestamp_unchanged_on_unrelated_save(self, accounts):
+        pos = Position.objects.create(symbol="AAPL", account=accounts["taxable"], thesis="Some thesis.")
+        first_ts = pos.thesis_updated_at
+
+        pos.name = "Apple Inc."
+        pos.save()
+        pos.refresh_from_db()
+        assert pos.thesis_updated_at == first_ts
+
+    def test_bear_case_timestamp_updates_on_edit(self, accounts):
+        pos = Position.objects.create(symbol="AAPL", account=accounts["taxable"], bear_case="Valuation risk.")
+        first_ts = pos.bear_case_updated_at
+        assert first_ts is not None
+
+        pos.bear_case = "Valuation risk plus regulatory."
+        pos.save()
+        pos.refresh_from_db()
+        assert pos.bear_case_updated_at > first_ts

@@ -9,8 +9,8 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Install dependencies
-COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen --no-dev --extra prod 2>/dev/null || uv sync --no-dev --extra prod
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --extra prod
 
 # Copy project
 COPY . .

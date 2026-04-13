@@ -33,7 +33,7 @@ uv run python manage.py runserver
 Use the Django admin at `/admin/`:
 
 1. Create **Accounts** (e.g. "IRA", "Brokerage")
-2. Create **Positions** (symbol + account). Name and sector auto-populate from yfinance on save.
+2. Create **Positions** (symbol + account)
 3. Add **Lots** as inlines on each position (shares, price, date)
 4. Optionally assign **Themes** and write a **Thesis** for each position
 

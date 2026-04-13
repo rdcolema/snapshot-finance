@@ -10,6 +10,7 @@ from ai.services.generate import generate_bear_case, generate_thesis
 from ai.services.theme_gen import generate_themes
 from ai.services.thesis_check import check_thesis
 from ai.services.weekly_snapshot import get_or_create_weekly_snapshot
+from core.models import Theme
 from positions.models import Position
 
 
@@ -19,7 +20,7 @@ class WeeklySnapshotView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["ai_available"] = is_available()
-        context["snapshot"] = WeeklySnapshot.objects.first()
+        context["snapshot"] = WeeklySnapshot.objects.order_by("-week_of").first()
         return context
 
 
@@ -67,8 +68,6 @@ def generate_bear_case_view(request, position_id):
 def generate_themes_view(request):
     if request.method != "POST":
         return redirect("ai:weekly")
-
-    from core.models import Theme
 
     positions = list(Position.objects.select_related("sector").all())
     if not positions:

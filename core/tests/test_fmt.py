@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from core.templatetags.fmt import human_cap, money, pct, ratio, shares_fmt
+from core.templatetags.fmt import human_cap, money, pct, pct_ratio, ratio, shares_fmt
 
 
 class TestMoney:
@@ -40,15 +40,27 @@ class TestPct:
     def test_normal_pct(self):
         assert pct(Decimal("12.34")) == "12.34%"
 
-    def test_decimal_ratio(self):
-        # yfinance yields like 0.0194 should be multiplied by 100
-        assert pct(0.0194) == "1.94%"
+    def test_small_pct(self):
+        # A 0.3% daily move should NOT be multiplied by 100
+        assert pct(Decimal("0.30")) == "0.30%"
 
     def test_none(self):
         assert pct(None) == "-"
 
     def test_zero(self):
         assert pct(0) == "0.00%"
+
+
+class TestPctRatio:
+    def test_decimal_ratio(self):
+        # yfinance yields like 0.0194 should be multiplied by 100
+        assert pct_ratio(0.0194) == "1.94%"
+
+    def test_none(self):
+        assert pct_ratio(None) == "-"
+
+    def test_zero(self):
+        assert pct_ratio(0) == "0.00%"
 
 
 class TestHumanCap:

@@ -35,34 +35,35 @@ class Position(models.Model):
     def __str__(self):
         return f"{self.symbol} ({self.account.name})"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_thesis = self.thesis
+        self._original_bear_case = self.bear_case
+
     def save(self, *args, **kwargs):
         self.symbol = self.symbol.upper()
-        if not self.pk:
+        is_new = self.pk is None
+        if is_new:
             if self.thesis:
                 self.thesis_updated_at = timezone.now()
             if self.bear_case:
                 self.bear_case_updated_at = timezone.now()
         else:
-            update_fields = kwargs.get("update_fields")
-            if update_fields is None or "thesis" in update_fields:
-                if self.thesis and not self.thesis_updated_at:
-                    self.thesis_updated_at = timezone.now()
-            if update_fields is None or "bear_case" in update_fields:
-                if self.bear_case and not self.bear_case_updated_at:
-                    self.bear_case_updated_at = timezone.now()
+            if self.thesis != self._original_thesis and self.thesis:
+                self.thesis_updated_at = timezone.now()
+            if self.bear_case != self._original_bear_case and self.bear_case:
+                self.bear_case_updated_at = timezone.now()
         super().save(*args, **kwargs)
+        self._original_thesis = self.thesis
+        self._original_bear_case = self.bear_case
 
     @property
     def shares(self):
-        total = self.lots.aggregate(total=models.Sum("shares"))["total"]
-        return total or Decimal("0")
+        return sum((lot.shares for lot in self.lots.all()), Decimal("0"))
 
     @property
     def cost_basis(self):
-        from django.db.models import F, Sum
-
-        total = self.lots.aggregate(total=Sum(F("shares") * F("purchase_price")))["total"]
-        return total or Decimal("0")
+        return sum((lot.shares * lot.purchase_price for lot in self.lots.all()), Decimal("0"))
 
     @property
     def avg_cost(self):

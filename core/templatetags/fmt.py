@@ -45,16 +45,25 @@ def ratio(value):
 
 @register.filter
 def pct(value, decimals=2):
-    """Format as percentage: 0.0194 -> 1.94% or 1.94 -> 1.94%."""
+    """Format a value that's already in percent units: 12.34 -> '12.34%'."""
     if value is None:
         return "-"
     try:
         val = float(value)
     except (ValueError, TypeError):
         return str(value)
-    # yfinance returns dividend yield as a decimal ratio (e.g. 0.0194 for 1.94%)
-    if 0 < abs(val) < 0.5:
-        val *= 100
+    return f"{val:.{int(decimals)}f}%"
+
+
+@register.filter
+def pct_ratio(value, decimals=2):
+    """Format a decimal ratio as percent: 0.0194 -> '1.94%'."""
+    if value is None:
+        return "-"
+    try:
+        val = float(value) * 100
+    except (ValueError, TypeError):
+        return str(value)
     return f"{val:.{int(decimals)}f}%"
 
 

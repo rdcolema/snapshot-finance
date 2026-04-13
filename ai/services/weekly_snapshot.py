@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import date
+from datetime import date, timedelta
 
 from ai.models import WeeklySnapshot
 from ai.services.client import get_client
@@ -15,7 +15,7 @@ MAX_TOKENS = 4096
 def _iso_week_start(d=None):
     """Get the Monday of the current ISO week."""
     d = d or date.today()
-    return d - __import__("datetime").timedelta(days=d.weekday())
+    return d - timedelta(days=d.weekday())
 
 
 def get_or_create_weekly_snapshot(force=False):
@@ -64,8 +64,8 @@ def get_or_create_weekly_snapshot(force=False):
 
     system = (
         "You are writing a concise weekly portfolio review for an experienced self-directed retail investor. "
-        "Cover: what moved this week, any theses that look shaky based on price action, "
-        "concentration concerns, and one thing worth looking at next week. Keep it under 600 words. "
+        "Cover: today's biggest movers, positions with the largest all-time gains that may be getting stretched, "
+        "concentration concerns, and one thing worth watching next week. Keep it under 600 words. "
         "Be direct and specific. No disclaimers."
     )
 

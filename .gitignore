@@ -86,7 +86,6 @@ celerybeat-schedule
 
 # Environments
 .env
-snapshot-finance/.env
 .venv
 env/
 venv/

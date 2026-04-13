@@ -15,30 +15,30 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from positions.models import Position
 from positions.services.fundamentals import get_fundamentals
 
-# Per-sector forward P/E thresholds: (cheap_below, fair_below, stretched_above)
+# Per-sector forward P/E thresholds: (cheap_below, fair_below)
 PE_THRESHOLDS = {
-    "Information Technology": (18, 30, 30),
-    "Communication Services": (15, 28, 28),
-    "Consumer Discretionary": (15, 25, 25),
-    "Health Care": (15, 25, 25),
-    "Industrials": (12, 22, 22),
-    "Financials": (10, 16, 16),
-    "Consumer Staples": (14, 22, 22),
-    "Energy": (8, 14, 14),
-    "Utilities": (12, 18, 18),
-    "Real Estate": (15, 25, 25),
-    "Materials": (10, 18, 18),
-    "Other": (12, 22, 22),
+    "Information Technology": (18, 30),
+    "Communication Services": (15, 28),
+    "Consumer Discretionary": (15, 25),
+    "Health Care": (15, 25),
+    "Industrials": (12, 22),
+    "Financials": (10, 16),
+    "Consumer Staples": (14, 22),
+    "Energy": (8, 14),
+    "Utilities": (12, 18),
+    "Real Estate": (15, 25),
+    "Materials": (10, 18),
+    "Other": (12, 22),
 }
 
-DEFAULT_THRESHOLD = (12, 22, 22)
+DEFAULT_THRESHOLD = (12, 22)
 
 
 def _get_verdict(value, sector):
     """Return 'cheap', 'fair', or 'stretched' for a given P/E and sector."""
     if value is None:
         return None
-    cheap, fair, _ = PE_THRESHOLDS.get(sector, DEFAULT_THRESHOLD)
+    cheap, fair = PE_THRESHOLDS.get(sector, DEFAULT_THRESHOLD)
     if value < cheap:
         return "cheap"
     elif value <= fair:
@@ -48,13 +48,18 @@ def _get_verdict(value, sector):
 
 
 def get_valuation_data():
-    """Build valuation table data for all positions."""
-    positions = list(Position.objects.select_related("sector").values_list("symbol", "name", "sector__name"))
-    if not positions:
+    """Build valuation table data for all positions, deduped by symbol."""
+    rows_raw = Position.objects.select_related("sector").values_list("symbol", "name", "sector__name")
+    # Dedupe: same symbol held in multiple accounts should appear once
+    seen = {}
+    for symbol, name, sector in rows_raw:
+        if symbol not in seen:
+            seen[symbol] = (name, sector)
+    if not seen:
         return []
 
     # Fetch fundamentals in parallel
-    symbols = [p[0] for p in positions]
+    symbols = list(seen.keys())
     fundamentals_map = {}
     with ThreadPoolExecutor(max_workers=min(10, len(symbols))) as executor:
         futures = {executor.submit(get_fundamentals, sym): sym for sym in symbols}
@@ -66,7 +71,7 @@ def get_valuation_data():
                 fundamentals_map[sym] = {}
 
     rows = []
-    for symbol, name, sector in positions:
+    for symbol, (name, sector) in seen.items():
         fundamentals = fundamentals_map.get(symbol, {})
 
         # Skip ETF-like sectors for valuation verdict

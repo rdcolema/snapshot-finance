@@ -12,27 +12,24 @@ def get_alerts():
     if not positions:
         return {"sizing": [], "stale_thesis": [], "concentration": []}
 
-    total_value = sum((p["mkt_value"] for p in positions), Decimal("0"))
     alerts = {"sizing": [], "stale_thesis": [], "concentration": []}
 
     # Position sizing alerts
     for p in positions:
-        if total_value == 0:
-            continue
-        pct = p["mkt_value"] / total_value * 100
+        weight = p["weight_pct"]
         if p["target_weight_pct"] is not None:
-            if pct > float(p["target_weight_pct"]):
+            if weight > p["target_weight_pct"]:
                 alerts["sizing"].append(
                     {
                         "symbol": p["symbol"],
-                        "message": f"Above target weight: {pct:.1f}% vs {p['target_weight_pct']}% target",
+                        "message": f"Above target weight: {weight:.1f}% vs {p['target_weight_pct']}% target",
                     }
                 )
-        elif pct > 5:
+        elif weight > 5:
             alerts["sizing"].append(
                 {
                     "symbol": p["symbol"],
-                    "message": f"No target set, currently {pct:.1f}% of portfolio",
+                    "message": f"No target set, currently {weight:.1f}% of portfolio",
                 }
             )
 
@@ -60,6 +57,7 @@ def get_alerts():
         )
 
     # Sector concentration (>25%)
+    total_value = sum((p["mkt_value"] for p in positions), Decimal("0"))
     sector_totals = {}
     for p in positions:
         s = p["sector"]
