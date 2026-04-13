@@ -1,0 +1,48 @@
+{% if valuation %}
+<div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-slate-400 border-b border-slate-800 text-left">
+                <th class="px-4 py-3">Symbol</th>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Sector</th>
+                <th class="px-4 py-3 text-right">Fwd P/E</th>
+                <th class="px-4 py-3 text-right">Trail P/E</th>
+                <th class="px-4 py-3 text-right">P/S</th>
+                <th class="px-4 py-3 text-right">EV/EBITDA</th>
+                <th class="px-4 py-3 text-center">Verdict</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in valuation %}
+            <tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
+                <td class="px-4 py-2 text-emerald-400 font-medium">{{ row.symbol }}</td>
+                <td class="px-4 py-2 text-white">{{ row.name }}</td>
+                <td class="px-4 py-2 text-slate-300">{{ row.sector }}</td>
+                <td class="px-4 py-2 text-right text-white">{{ row.forward_pe|default:"-" }}</td>
+                <td class="px-4 py-2 text-right text-white">{{ row.trailing_pe|default:"-" }}</td>
+                <td class="px-4 py-2 text-right text-white">{{ row.price_to_sales|default:"-" }}</td>
+                <td class="px-4 py-2 text-right text-white">{{ row.ev_to_ebitda|default:"-" }}</td>
+                <td class="px-4 py-2 text-center">
+                    {% if row.is_etf %}
+                    <span class="text-slate-500">-</span>
+                    {% elif row.verdict == "cheap" %}
+                    <span class="bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded text-xs">Cheap</span>
+                    {% elif row.verdict == "fair" %}
+                    <span class="bg-blue-900/50 text-blue-400 px-2 py-0.5 rounded text-xs">Fair</span>
+                    {% elif row.verdict == "stretched" %}
+                    <span class="bg-red-900/50 text-red-400 px-2 py-0.5 rounded text-xs">Stretched</span>
+                    {% else %}
+                    <span class="text-slate-500">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center">
+    <p class="text-slate-400">No valuation data available.</p>
+</div>
+{% endif %}

@@ -1,0 +1,194 @@
+{% extends "core/base.html" %}
+{% block title %}Dashboard - Snapshot Finance{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-semibold text-white mb-6">Dashboard</h1>
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Total Value</div>
+            <div class="text-xl font-semibold text-white">${{ total_value|default:"0.00" }}</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Day's Change</div>
+            <div class="text-lg font-semibold {% if day_change_pct >= 0 %}text-pos{% else %}text-neg{% endif %}">
+                {{ day_change_dollar|default:"$0.00" }}
+            </div>
+            <div class="text-sm {% if day_change_pct >= 0 %}text-pos{% else %}text-neg{% endif %}">
+                ({{ day_change_pct|default:"0.00" }}%)
+            </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Total Return</div>
+            <div class="text-lg font-semibold {% if total_return_pct >= 0 %}text-pos{% else %}text-neg{% endif %}">
+                {{ total_return_dollar|default:"$0.00" }}
+            </div>
+            <div class="text-sm {% if total_return_pct >= 0 %}text-pos{% else %}text-neg{% endif %}">
+                ({{ total_return_pct|default:"0.00" }}%)
+            </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Cash</div>
+            <div class="text-xl font-semibold text-white">${{ total_cash|default:"0.00" }}</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Positions</div>
+            <div class="text-xl font-semibold text-white">{{ num_positions|default:"0" }}</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Accounts</div>
+            <div class="text-xl font-semibold text-white">{{ num_accounts|default:"0" }}</div>
+        </div>
+    </div>
+
+    {% if num_positions > 0 %}
+    <!-- Movers and Winners -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Top movers today -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">Top Movers Today</h2>
+            {% if top_movers %}
+            <div class="space-y-2">
+                {% for m in top_movers %}
+                <div class="flex items-center justify-between">
+                    <span class="font-medium text-white">{{ m.symbol }}</span>
+                    <span class="text-sm {% if m.day_change_pct >= 0 %}text-pos{% else %}text-neg{% endif %}">
+                        {% if m.day_change_pct >= 0 %}+{% endif %}{{ m.day_change_pct }}%
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-slate-500">No market data available</p>
+            {% endif %}
+        </div>
+
+        <!-- Top winners all-time -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">Top Winners All-Time</h2>
+            {% if top_winners %}
+            <div class="space-y-2">
+                {% for w in top_winners %}
+                <div class="flex items-center justify-between">
+                    <span class="font-medium text-white">{{ w.symbol }}</span>
+                    <span class="text-sm {% if w.total_return_pct >= 0 %}text-pos{% else %}text-neg{% endif %}">
+                        {% if w.total_return_pct >= 0 %}+{% endif %}{{ w.total_return_pct }}%
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-slate-500">No data available</p>
+            {% endif %}
+        </div>
+
+        <!-- Largest positions -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">Largest Positions</h2>
+            {% if top_positions %}
+            <div class="space-y-2">
+                {% for p in top_positions %}
+                <div class="flex items-center justify-between">
+                    <span class="font-medium text-white">{{ p.symbol }}</span>
+                    <span class="text-sm text-slate-300">{{ p.pct_of_portfolio }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-slate-500">No positions yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">By Sector</h2>
+            <div id="sector-pie"></div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">By Theme</h2>
+            <div id="theme-bar"></div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">By Account</h2>
+            <div id="account-bar"></div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty state -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-slate-600 mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        <h2 class="text-lg font-medium text-white mb-2">No positions yet</h2>
+        <p class="text-sm text-slate-400 mb-4">Add accounts and positions through the Django admin to get started.</p>
+        <a href="/admin/" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
+            Open Admin
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if sector_chart_data %}
+<script>
+    function fmtDollar(v) {
+        return '$' + v.toLocaleString('en-US', {maximumFractionDigits: 0});
+    }
+
+    var layout = {
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { color: '#94a3b8', size: 11 },
+        margin: { t: 10, b: 30, l: 50, r: 10 },
+        height: 250,
+        showlegend: false,
+    };
+
+    // Sector pie
+    var sectorData = JSON.parse('{{ sector_chart_data|escapejs }}');
+    Plotly.newPlot('sector-pie', [{
+        type: 'pie',
+        labels: sectorData.labels,
+        values: sectorData.values,
+        hole: 0.4,
+        textinfo: 'percent',
+        textposition: 'inside',
+        hovertemplate: '%{label}<br>%{percent}<br>' + '%{value:$,.0f}<extra></extra>',
+        marker: { colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16', '#06b6d4', '#d946ef', '#a3a3a3'] }
+    }], {...layout, showlegend: true, legend: {font: {size: 10, color: '#94a3b8'}, orientation: 'h', y: -0.15, x: 0.5, xanchor: 'center'}, margin: {t: 10, b: 60, l: 10, r: 10}, height: 300}, {responsive: true, displayModeBar: false});
+
+    // Theme bar (horizontal -- labels are long)
+    var themeData = JSON.parse('{{ theme_chart_data|escapejs }}');
+    if (themeData.labels.length > 0) {
+        // Reverse so largest is at top
+        var tLabels = themeData.labels.slice().reverse();
+        var tValues = themeData.values.slice().reverse();
+        var tHeight = Math.max(250, tLabels.length * 22 + 40);
+        Plotly.newPlot('theme-bar', [{
+            type: 'bar',
+            orientation: 'h',
+            y: tLabels,
+            x: tValues,
+            marker: { color: '#3b82f6' },
+            hovertemplate: '%{y}<br>%{x:$,.0f}<extra></extra>'
+        }], {...layout, height: tHeight, margin: {t: 10, b: 30, l: 160, r: 10}, xaxis: {color: '#94a3b8', tickprefix: '$', separatethousands: true}, yaxis: {color: '#94a3b8', automargin: true, tickfont: {size: 10}}}, {responsive: true, displayModeBar: false});
+    } else {
+        document.getElementById('theme-bar').innerHTML = '<p class="text-sm text-slate-500 py-8 text-center">No themes assigned yet</p>';
+    }
+
+    // Account bar
+    var accountData = JSON.parse('{{ account_chart_data|escapejs }}');
+    Plotly.newPlot('account-bar', [{
+        type: 'bar',
+        x: accountData.labels,
+        y: accountData.values,
+        marker: { color: '#10b981' },
+        hovertemplate: '%{x}<br>%{y:$,.0f}<extra></extra>'
+    }], {...layout, xaxis: {color: '#94a3b8'}, yaxis: {color: '#94a3b8', tickprefix: '$', separatethousands: true}}, {responsive: true, displayModeBar: false});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+<div class="flex flex-wrap gap-2 items-center">
+    {% for theme in position.themes.all %}
+    <span class="bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded text-xs">{{ theme.name }}</span>
+    {% empty %}
+    <span class="text-sm text-slate-500 italic">No themes assigned.</span>
+    {% endfor %}
+    <button onclick="document.getElementById('themes-edit').classList.toggle('hidden');"
+            class="text-xs text-emerald-400 hover:text-emerald-300 ml-1">Edit</button>
+</div>
+<form id="themes-edit" class="hidden mt-3" method="post" action="/positions/{{ position.id }}/update-themes/"
+      hx-post="/positions/{{ position.id }}/update-themes/" hx-target="#themes-display" hx-swap="innerHTML">
+    {% csrf_token %}
+    <div class="flex flex-wrap gap-2">
+        {% for theme in all_themes %}
+        <label class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 cursor-pointer hover:border-slate-600">
+            <input type="checkbox" name="themes" value="{{ theme.id }}"
+                   {% if theme in position.themes.all %}checked{% endif %}
+                   class="rounded bg-slate-700 border-slate-600 text-emerald-500 focus:ring-emerald-500">
+            {{ theme.name }}
+        </label>
+        {% endfor %}
+    </div>
+    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 mt-3 transition-colors">
+        Save
+    </button>
+</form>

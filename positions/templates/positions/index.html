@@ -1,212 +1,205 @@
-{% extends "home/base.html" %}
-{% load static %}
-
-{% block title %}Positions{% endblock %}
-
-
+{% extends "core/base.html" %}
+{% block title %}Positions - Snapshot Finance{% endblock %}
 {% block extra_head %}
-
-    <style>
-
-        /* Positions Table Stuff */
-
-        #positions-table td {
-            padding: 1px 8px
-        }
-
-        #positions-table td:nth-child(1), #positions-table td:nth-child(2) {
-            color: #11C
-        }
-
-        #positions-table td:nth-child(n+3), #positions-table th:nth-child(n+3) {
-            text-align: right;
-        }
-
-        #positions-table td:last-child, #positions-table th:last-child {
-            display: none
-        }
-
-        #positions-table tfoot td:nth-child(1) {
-            color: black;
-        }
-
-    </style>
-
+<link href="https://unpkg.com/tabulator-tables@6.2.1/dist/css/tabulator_midnight.min.css" rel="stylesheet">
+<script src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
 {% endblock %}
-
-
 {% block content %}
-
-    <!--Sidebar-->
-    <div id="sidenav" class="sidenav">
-
-        <p id="accounts-header" class="sidebar-header">Select Accounts To Display</p>
-        <select multiple="multiple" name="accounts[]" id="dropdown_accounts" class="form-control">
-            {% for acct in accounts %}
-                <option value="{{ acct }}" class="form-control">{{ acct }}</option>
-            {% endfor %}
-        </select>
-
-        <hr>
-
-        <p id="cash-header" class="sidebar-header">Cash Balance</p>
-        <p id="cash-totals">${{ total_cash }}</p>
-
-        <hr>
-
-        <p id="total-value-header" class="sidebar-header">Total Value</p>
-        <p id="total-value">${{ total_value }}</p>
-
-        <hr>
-
-        <p id="position-count-header" class="sidebar-header">Number of Positions</p>
-        <p id="position-count">{{ num_positions }}</p>
-
-        <hr>
-
+<div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-semibold text-white">Positions</h1>
+        <div class="flex gap-3 items-center">
+            <div class="relative">
+                <label class="text-xs text-slate-400 block mb-1">Account</label>
+                <select id="account-filter" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 min-w-[120px]">
+                    <option value="">All</option>
+                    {% for account in accounts %}
+                    <option value="{{ account.id }}">{{ account.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="relative">
+                <label class="text-xs text-slate-400 block mb-1">Sector</label>
+                <select id="sector-filter" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 min-w-[160px]">
+                    <option value="">All Sectors</option>
+                    {% for sector in sectors %}
+                    <option value="{{ sector.id }}">{{ sector.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button id="clear-filters" class="text-xs text-slate-400 hover:text-white mt-4 hidden">Clear</button>
+        </div>
     </div>
 
-    <p id="positions-header" class="page-title">Positions</p>
+    <!-- Totals bar -->
+    <div id="totals-bar" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5">
+            <div class="text-xs text-slate-400">Positions</div>
+            <div id="t-count" class="text-lg font-semibold text-white">-</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5">
+            <div class="text-xs text-slate-400">Market Value</div>
+            <div id="t-mkt" class="text-lg font-semibold text-white">-</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5">
+            <div class="text-xs text-slate-400">Cost Basis</div>
+            <div id="t-cost" class="text-lg font-semibold text-white">-</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5">
+            <div class="text-xs text-slate-400">Day's Change</div>
+            <div id="t-day" class="text-lg font-semibold">-</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5">
+            <div class="text-xs text-slate-400">Total Gain</div>
+            <div id="t-gain" class="text-lg font-semibold">-</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2.5">
+            <div class="text-xs text-slate-400">Total Return</div>
+            <div id="t-ret" class="text-lg font-semibold">-</div>
+        </div>
+    </div>
 
-    <hr>
+    <div id="positions-table"></div>
 
-    <!--Positions Table-->
-    {{ positions|safe }}
-
-
-    <!--JS-->
-    <script>
-
-        // Coloring numbers based on direction of change
-
-        function colorCols() {
-            var colsToColor = [6, 7, 8, 10, 11];
-
-            $('#positions-table tr:not(thead tr)').each(function(){
-
-                for (var i=0; i<colsToColor.length; i++) {
-                    var cell = $(":nth-child(" + colsToColor[i] + ")", this);
-
-                    if (cell.text() < 0) {
-                        cell.css("color", "#d14836");
-                    }
-
-                    else {
-                        cell.css("color", "#093");
-                    }
-
-                }
-            })
-        }
-
-        $(document).ready(function() {
-
-            // add an ID to the main table for reference
-            $('.dataframe').attr("id", "positions-table");
-
-
-            // Handling totals row for sorting purposes:
-
-            // Find totals row
-            var totalsRow = $("#positions-table td").filter(function() {
-                return $(this).text() == "Totals";
-            }).closest("tr");
-
-            // Detach totals row and create tfoot element from it
-            var totalsRow = totalsRow.detach();
-            var totalsHtml = "<tfoot>" + totalsRow.html() + "</tfoot>";
-
-            // Append tfoot to tbody
-            $("#positions-table tbody").after(totalsHtml);
-
-            // color columns
-            colorCols();
-
-        });
-
-
-
-        // Account Filtering
-
-
-        $('#dropdown_accounts').change(function() {
-            var filter_accounts = Array();
-
-            // get list of selected accounts
-            $('#dropdown_accounts').children('option').filter(':selected').each(
-                function(i) {
-                  filter_accounts.push($(this).text());
-            })
-
-            // hide rows for unselected accounts
-            $('#positions-table tbody tr').each(function(){
-
-                var row = $(this);
-                var account = row.children('td').last().text();
-
-                // reset all to display
-                row.css("display", "table-row");
-
-                // hide the filtered accounts
-                if( $.inArray(account, filter_accounts) == -1 ){
-                    row.css("display", "none");
-                }
-            })
-
-            // function for summing columns
-            function sumCol(ix) {
-                colTotal = 0;
-
-                $("#positions-table tbody td:nth-child(" + ix + "):visible").each(function() {
-
-                    colTotal += parseFloat($(this).text());
-                })
-
-                return colTotal.toFixed(2);
-            }
-
-            // update total market value
-            var totalMarketValue = sumCol(4);
-            $("#positions-table tfoot td:nth-child(4)").text(totalMarketValue);
-
-            // update day's gain/loss ($)
-            var daysGain = sumCol(8);
-            $("#positions-table tfoot td:nth-child(8)").text(daysGain);
-
-            // update day's gain/loss (%)
-            $("#positions-table tfoot td:nth-child(7)").text( (100. * daysGain / totalMarketValue).toFixed(2) );
-
-            // update total cost basis
-            $("#positions-table tfoot td:nth-child(9)").text(sumCol(9));
-
-            // update total gain/loss ($)
-            var totalGain = sumCol(10);
-            $("#positions-table tfoot td:nth-child(10)").text(totalGain);
-
-            // update total gain/loss (%)
-            $("#positions-table tfoot td:nth-child(11)").text( (100. * totalGain / totalMarketValue).toFixed(2) );
-
-            // update total cash
-            var cashTotal = 0;
-
-            {% for acct, cash in cash_balances.items %}
-                if( $.inArray( "{{ acct }}" , filter_accounts ) != -1 ) {
-                    cashTotal += {{ cash }};
-                }
-            {% endfor %}
-
-            $('#cash-totals').text("$" + cashTotal.toFixed(2));
-
-            // update total value
-            var totalVal = Number(cashTotal) + Number(totalMarketValue);
-            $('#total-value').text("$" + totalVal.toFixed(2));
-
-            // color cols
-            colorCols();
-
-        });
-
-
-    </script>
-
+    {% if not positions_json or positions_json == "[]" %}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center mt-4">
+        <p class="text-slate-400">No positions yet. Add them via the <a href="/admin/" class="text-emerald-400 hover:text-emerald-300">Django admin</a>.</p>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+var positionsData = JSON.parse('{{ positions_json|escapejs }}');
+
+function colorFormatter(cell) {
+    var val = parseFloat(cell.getValue());
+    if (val > 0) return "<span class='text-emerald-400'>+" + val.toFixed(2) + "</span>";
+    if (val < 0) return "<span class='text-red-400'>" + val.toFixed(2) + "</span>";
+    return val.toFixed(2);
+}
+
+function pctFormatter(cell) {
+    var val = parseFloat(cell.getValue());
+    if (val > 0) return "<span class='text-emerald-400'>+" + val.toFixed(2) + "%</span>";
+    if (val < 0) return "<span class='text-red-400'>" + val.toFixed(2) + "%</span>";
+    return val.toFixed(2) + "%";
+}
+
+function moneyFormatter(cell) {
+    var val = parseFloat(cell.getValue());
+    return "$" + val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function fmtMoney(val) {
+    return "$" + val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function fmtColor(val) {
+    var cls = val > 0 ? "text-emerald-400" : val < 0 ? "text-red-400" : "text-white";
+    var sign = val > 0 ? "+" : "";
+    return "<span class='" + cls + "'>" + sign + val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + "</span>";
+}
+
+function updateTotals(data) {
+    var count = data.length;
+    var mkt = 0, cost = 0, dayGain = 0, totalGain = 0;
+    data.forEach(function(p) {
+        mkt += parseFloat(p.mkt_value) || 0;
+        cost += parseFloat(p.cost_basis) || 0;
+        dayGain += parseFloat(p.day_gain) || 0;
+        totalGain += parseFloat(p.total_gain) || 0;
+    });
+    var ret = cost > 0 ? (totalGain / cost * 100) : 0;
+
+    document.getElementById("t-count").textContent = count;
+    document.getElementById("t-mkt").textContent = fmtMoney(mkt);
+    document.getElementById("t-cost").textContent = fmtMoney(cost);
+    document.getElementById("t-day").innerHTML = fmtColor(dayGain);
+    document.getElementById("t-gain").innerHTML = fmtColor(totalGain);
+    var retCls = ret > 0 ? "text-emerald-400" : ret < 0 ? "text-red-400" : "text-white";
+    var retSign = ret > 0 ? "+" : "";
+    document.getElementById("t-ret").innerHTML = "<span class='" + retCls + "'>" + retSign + ret.toFixed(2) + "%</span>";
+}
+
+if (positionsData.length > 0) {
+    updateTotals(positionsData);
+
+    var table = new Tabulator("#positions-table", {
+        data: positionsData,
+        layout: "fitDataFill",
+        height: "calc(100vh - 320px)",
+        frozenColumns: 1,
+        columns: [
+            {title: "Symbol", field: "symbol", frozen: true, formatter: function(cell) {
+                var id = cell.getRow().getData().id;
+                return "<a href='/positions/" + id + "/' class='text-emerald-400 hover:text-emerald-300 font-medium'>" + cell.getValue() + "</a>";
+            }, headerFilter: "input"},
+            {title: "Name", field: "name", minWidth: 150},
+            {title: "Sector", field: "sector", formatter: function(cell) {
+                var val = cell.getValue();
+                if (!val || val === "-") return "<span class='text-slate-500'>-</span>";
+                return "<span class='bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-xs'>" + val + "</span>";
+            }},
+            {title: "Account", field: "account"},
+            {title: "Shares", field: "shares", hozAlign: "right", sorter: "number"},
+            {title: "Avg Cost", field: "avg_cost", hozAlign: "right", formatter: moneyFormatter, sorter: "number"},
+            {title: "Last", field: "price", hozAlign: "right", formatter: function(cell) {
+                var val = cell.getValue();
+                if (!val) return "<span class='text-slate-500'>-</span>";
+                return "$" + parseFloat(val).toFixed(2);
+            }, sorter: "number"},
+            {title: "Day $", field: "day_change", hozAlign: "right", formatter: colorFormatter, sorter: "number"},
+            {title: "Day %", field: "day_change_pct", hozAlign: "right", formatter: pctFormatter, sorter: "number"},
+            {title: "Mkt Value", field: "mkt_value", hozAlign: "right", formatter: moneyFormatter, sorter: "number"},
+            {title: "Total $", field: "total_gain", hozAlign: "right", formatter: colorFormatter, sorter: "number"},
+            {title: "Total %", field: "total_return_pct", hozAlign: "right", formatter: pctFormatter, sorter: "number"},
+            {title: "% of Portfolio", field: "weight_pct", hozAlign: "right", formatter: function(cell) {
+                var val = cell.getValue();
+                return val ? parseFloat(val).toFixed(2) + "%" : "-";
+            }, sorter: "number"},
+        ],
+        initialSort: [{column: "mkt_value", dir: "desc"}],
+    });
+
+    table.on("rowClick", function(e, row) {
+        if (e.target.closest("a")) return;
+        var id = row.getData().id;
+        window.location.href = "/positions/" + id + "/";
+    });
+
+    var accountFilter = document.getElementById('account-filter');
+    var sectorFilter = document.getElementById('sector-filter');
+    var clearBtn = document.getElementById('clear-filters');
+
+    function filterPositions() {
+        var accountVal = accountFilter ? accountFilter.value : "";
+        var sectorVal = sectorFilter.value;
+        var params = new URLSearchParams();
+        if (accountVal) params.append('account', accountVal);
+        if (sectorVal) params.append('sector', sectorVal);
+
+        clearBtn.classList.toggle('hidden', !accountVal && !sectorVal);
+
+        fetch('/positions/filter/?' + params.toString())
+            .then(r => r.json())
+            .then(function(data) {
+                table.replaceData(data);
+                updateTotals(data);
+            });
+    }
+
+    if (accountFilter) accountFilter.addEventListener('change', filterPositions);
+    sectorFilter.addEventListener('change', filterPositions);
+    clearBtn.addEventListener('click', function() {
+        if (accountFilter) accountFilter.value = "";
+        sectorFilter.value = "";
+        clearBtn.classList.add('hidden');
+        table.replaceData(positionsData);
+        updateTotals(positionsData);
+    });
+}
+</script>
+{% endblock %}
+

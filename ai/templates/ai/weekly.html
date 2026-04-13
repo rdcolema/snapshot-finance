@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+{% block title %}AI Insights - Snapshot Finance{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold text-white">AI Insights</h1>
+        {% if ai_available %}
+        <div class="flex gap-2">
+            <form method="post" action="{% url 'ai:generate_themes' %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
+                    Generate Themes
+                </button>
+            </form>
+            <form method="post" action="{% url 'ai:generate_weekly' %}">
+                {% csrf_token %}
+                {% if snapshot %}
+                <input type="hidden" name="force" value="1">
+                <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
+                    Regenerate Snapshot
+                </button>
+                {% else %}
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
+                    Generate Weekly Snapshot
+                </button>
+                {% endif %}
+            </form>
+        </div>
+        {% else %}
+        <span class="text-sm text-slate-500" title="Set ANTHROPIC_API_KEY in .env to enable AI features">AI not configured</span>
+        {% endif %}
+    </div>
+
+    {% if snapshot %}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="text-sm text-slate-400">Week of {{ snapshot.week_of|date:"M d, Y" }}</span>
+            <span class="text-xs text-slate-500">&middot; {{ snapshot.model }}</span>
+        </div>
+        <div class="prose prose-invert prose-sm max-w-none text-slate-300 whitespace-pre-wrap">{{ snapshot.response }}</div>
+    </div>
+    {% elif ai_available %}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
+        <p class="text-slate-400">No snapshot for this week yet. Click "Generate" to create one.</p>
+    </div>
+    {% else %}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
+        <p class="text-slate-400 mb-2">AI features are not configured.</p>
+        <p class="text-sm text-slate-500">Set <code class="bg-slate-800 px-1 rounded">ANTHROPIC_API_KEY</code> in your <code class="bg-slate-800 px-1 rounded">.env</code> file to enable weekly AI snapshots.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">Today's Movers</h2>
+        {% if movers.day_movers %}
+        <div class="space-y-2">
+            {% for m in movers.day_movers %}
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-white font-medium">{{ m.symbol }}</span>
+                <span class="{% if m.day_change_pct >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                    {% if m.day_change_pct >= 0 %}+{% endif %}{{ m.day_change_pct }}%
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500">No data</p>
+        {% endif %}
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">All-Time Winners</h2>
+        {% if movers.winners %}
+        <div class="space-y-2">
+            {% for w in movers.winners %}
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-white font-medium">{{ w.symbol }}</span>
+                <span class="{% if w.total_return_pct >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                    {% if w.total_return_pct >= 0 %}+{% endif %}{{ w.total_return_pct }}%
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500">No data</p>
+        {% endif %}
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">All-Time Losers</h2>
+        {% if movers.losers %}
+        <div class="space-y-2">
+            {% for l in movers.losers %}
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-white font-medium">{{ l.symbol }}</span>
+                <span class="{% if l.total_return_pct >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                    {% if l.total_return_pct >= 0 %}+{% endif %}{{ l.total_return_pct }}%
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500">No data</p>
+        {% endif %}
+    </div>
+</div>

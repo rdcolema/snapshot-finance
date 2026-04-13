@@ -1,78 +1,44 @@
-{% extends "home/base.html" %}
-{% load static %}
-
-{% block title %}Analysis{% endblock %}
-
-
-{% block extra_head %}
-
-    <style>
-
-        .bk-plot {
-            margin: 25px 0 70px 230px;
-        }
-
-        #sidenav {
-            top: 155px;
-        }
-
-        #dropdown_accounts {
-            display: none;
-        }
-
-    </style>
-
-{% endblock %}
-
-
+{% extends "core/base.html" %}
+{% block title %}Analysis - Snapshot Finance{% endblock %}
 {% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-semibold text-white mb-6">Analysis</h1>
 
-    <!--Sidebar-->
-    <div id="sidenav" class="sidenav">
-
-        <p id="cash-header" class="sidebar-header">Cash Balance</p>
-        <p id="cash-totals">${{ total_cash }}</p>
-
-        <hr>
-
-        <p id="total-value-header" class="sidebar-header">Total Value</p>
-        <p id="total-value">${{ total_value }}</p>
-
-        <hr>
-
-        <p id="position-count-header" class="sidebar-header">Number of Positions</p>
-        <p id="position-count">{{ num_positions }}</p>
-
-        <hr>
-
+    <!-- Tabs -- HTMX swaps just the tab content panel -->
+    <div class="flex gap-1 mb-6 border-b border-slate-800" id="analysis-tabs">
+        {% for t, label in tab_choices %}
+        <a href="?tab={{ t }}"
+           hx-get="/analysis/tab/?tab={{ t }}"
+           hx-target="#tab-content"
+           hx-swap="innerHTML"
+           hx-push-url="?tab={{ t }}"
+           class="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors cursor-pointer {% if tab == t %}bg-slate-800 text-white border-b-2 border-emerald-500{% else %}text-slate-400 hover:text-white{% endif %}"
+           {% if tab == t %}data-active="true"{% endif %}
+        >{{ label }}</a>
+        {% endfor %}
     </div>
 
-    <p id="analysis-header" class="page-title">Analysis</p>
+    <div id="tab-content">
+        {% include tab_template %}
+    </div>
+</div>
+{% endblock %}
 
-    <hr>
-
-    {{ concentration_bar_chart|safe }}
-    {{ concentration_area_chart|safe }}
-
-    <script>
-
-        // Account Filtering
-
-        $('#dropdown_accounts').change(function() {
-            var filter_accounts = Array();
-
-            // get list of selected accounts
-            $('#dropdown_accounts').children('option').filter(':selected').each(
-                function(i) {
-                  filter_accounts.push($(this).text());
-            })
-
-            // TODO: DO STUFF HERE
-
-        })
-
-    </script>
-
-
-
+{% block extra_js %}
+<script>
+// After HTMX swaps tab content, update the active tab styling
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id !== 'tab-content') return;
+    var url = new URL(window.location);
+    var activeTab = url.searchParams.get('tab') || 'concentration';
+    document.querySelectorAll('#analysis-tabs a').forEach(function(a) {
+        var tabName = new URL(a.href).searchParams.get('tab');
+        if (tabName === activeTab) {
+            a.className = 'px-4 py-2 text-sm font-medium rounded-t-lg transition-colors cursor-pointer bg-slate-800 text-white border-b-2 border-emerald-500';
+        } else {
+            a.className = 'px-4 py-2 text-sm font-medium rounded-t-lg transition-colors cursor-pointer text-slate-400 hover:text-white';
+        }
+    });
+});
+</script>
 {% endblock %}

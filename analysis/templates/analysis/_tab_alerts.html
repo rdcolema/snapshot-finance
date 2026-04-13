@@ -1,0 +1,47 @@
+{% if alerts.sizing or alerts.stale_thesis or alerts.concentration %}
+<div class="space-y-6">
+    {% if alerts.sizing %}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-amber-400 uppercase tracking-wide mb-3">Position Sizing</h2>
+        <div class="space-y-2">
+            {% for a in alerts.sizing %}
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-white font-medium">{{ a.symbol }}</span>
+                <span class="text-amber-400">{{ a.message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% if alerts.stale_thesis %}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-amber-400 uppercase tracking-wide mb-3">Thesis Freshness</h2>
+        <div class="space-y-2">
+            {% for a in alerts.stale_thesis %}
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-white font-medium">{{ a.symbol }}</span>
+                <span class="text-amber-400">{{ a.message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% if alerts.concentration %}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-amber-400 uppercase tracking-wide mb-3">Concentration</h2>
+        <div class="space-y-2">
+            {% for a in alerts.concentration %}
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-white font-medium">{{ a.sector }}</span>
+                <span class="text-amber-400">{{ a.message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center">
+    <p class="text-slate-400">No alerts. Portfolio looks clean.</p>
+</div>
+{% endif %}

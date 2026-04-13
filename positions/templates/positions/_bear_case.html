@@ -1,0 +1,16 @@
+{% if position.bear_case %}
+<p class="text-sm text-slate-300 whitespace-pre-wrap">{{ position.bear_case }}</p>
+{% else %}
+<p class="text-sm text-slate-500 italic">No bear case written yet.</p>
+{% endif %}
+<button onclick="document.getElementById('bear-case-edit').classList.toggle('hidden'); this.classList.toggle('hidden');"
+        class="text-xs text-emerald-400 hover:text-emerald-300 mt-2">Edit</button>
+<form id="bear-case-edit" class="hidden mt-3" method="post" action="/positions/{{ position.id }}/update-bear-case/"
+      hx-post="/positions/{{ position.id }}/update-bear-case/" hx-target="#bear-case-display" hx-swap="innerHTML">
+    {% csrf_token %}
+    <textarea name="bear_case" rows="4"
+              class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-emerald-500 focus:outline-none">{{ position.bear_case }}</textarea>
+    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 mt-2 transition-colors">
+        Save
+    </button>
+</form>

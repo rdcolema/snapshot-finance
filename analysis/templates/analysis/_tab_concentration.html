@@ -1,0 +1,70 @@
+{% if concentration.by_position %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">By Position</h2>
+        <div id="chart-position"></div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">By Sector</h2>
+        <div id="chart-sector"></div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">By Theme</h2>
+        <div id="chart-theme"></div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">By Account</h2>
+        <div id="chart-account"></div>
+    </div>
+</div>
+<script>
+var data = JSON.parse('{{ concentration_json|escapejs }}');
+var layout = {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: {color: '#94a3b8', size: 11},
+    margin: {t: 10, b: 40, l: 40, r: 10},
+    height: 300, showlegend: false,
+};
+var colors = ['#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16','#06b6d4','#d946ef','#a3a3a3'];
+var cfg = {responsive: true, displayModeBar: false};
+
+if (data.by_position.length) {
+    Plotly.newPlot('chart-position', [{
+        type: 'bar', x: data.by_position.map(p => p.symbol), y: data.by_position.map(p => p.pct),
+        marker: {color: '#10b981'}
+    }], {...layout, yaxis: {color: '#94a3b8', title: '% of Portfolio'}}, cfg);
+}
+
+var sectors = data.by_sector;
+if (Object.keys(sectors).length) {
+    Plotly.newPlot('chart-sector', [{
+        type: 'pie', labels: Object.keys(sectors), values: Object.values(sectors).map(v => v.pct),
+        hole: 0.4, textinfo: 'label+percent', textposition: 'outside',
+        marker: {colors: colors}
+    }], {...layout, showlegend: false}, cfg);
+}
+
+var themes = data.by_theme;
+if (Object.keys(themes).length) {
+    Plotly.newPlot('chart-theme', [{
+        type: 'bar', x: Object.keys(themes), y: Object.values(themes).map(v => v.pct),
+        marker: {color: '#3b82f6'}
+    }], {...layout, yaxis: {color: '#94a3b8', title: '% of Portfolio'}}, cfg);
+} else {
+    document.getElementById('chart-theme').innerHTML = '<p class="text-sm text-slate-500 py-8 text-center">No themes assigned</p>';
+}
+
+var accounts = data.by_account;
+if (Object.keys(accounts).length) {
+    Plotly.newPlot('chart-account', [{
+        type: 'pie', labels: Object.keys(accounts), values: Object.values(accounts).map(v => v.pct),
+        hole: 0.4, textinfo: 'label+percent', textposition: 'outside',
+        marker: {colors: colors}
+    }], {...layout, showlegend: false}, cfg);
+}
+</script>
+{% else %}
+<div class="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center">
+    <p class="text-slate-400">No position data available.</p>
+</div>
+{% endif %}
