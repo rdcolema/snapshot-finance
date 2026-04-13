@@ -78,11 +78,13 @@ def get_or_create_weekly_snapshot(force=False):
         )
         text = response.content[0].text
 
-        snapshot = WeeklySnapshot.objects.create(
+        snapshot, _created = WeeklySnapshot.objects.update_or_create(
             week_of=week_start,
-            portfolio_snapshot=json.loads(portfolio_data),
-            response=text,
-            model=MODEL,
+            defaults={
+                "portfolio_snapshot": json.loads(portfolio_data),
+                "response": text,
+                "model": MODEL,
+            },
         )
         return snapshot
     except Exception:

@@ -6,21 +6,21 @@
         <h1 class="text-2xl font-semibold text-white">AI Insights</h1>
         {% if ai_available %}
         <div class="flex gap-2">
-            <form method="post" action="{% url 'ai:generate_themes' %}">
+            <form method="post" action="{% url 'ai:generate_themes' %}" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Generating…'">
                 {% csrf_token %}
-                <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
+                <button type="submit" class="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
                     Generate Themes
                 </button>
             </form>
-            <form method="post" action="{% url 'ai:generate_weekly' %}">
+            <form method="post" action="{% url 'ai:generate_weekly' %}" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Generating…'">
                 {% csrf_token %}
                 {% if snapshot %}
                 <input type="hidden" name="force" value="1">
-                <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
+                <button type="submit" class="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
                     Regenerate Snapshot
                 </button>
                 {% else %}
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors">
                     Generate Weekly Snapshot
                 </button>
                 {% endif %}
